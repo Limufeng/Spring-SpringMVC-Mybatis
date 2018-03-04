@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bean">
+	<resultMap type="Product" id="productBean">
+		<id column="pid" property="id" />
+		<result column="pname" property="name" />
+		<result column="price" property="price" />
+		<!-- 多对一的关系 -->
+		<!-- property: 指的是属性名称, javaType：指的是属性的类型 -->
+		<association property="category" javaType="Category">
+			<id column="cid" property="id" />
+			<result column="cname" property="name" />
+		</association>
+
+	</resultMap>
+	<!-- if标签：使用模糊查询的时候可能会用到不同的字段，如果查询一次使用一条sql语句，会变得难以维护，就能使用Mybatis的动态sql 
+		if标签 ；如果没有传入参数那么就是查询所有，这样就可以一条语句应付多种情况。 -->
+	<!-- where标签：当出现多条件查询的时候不能愉快的直接使用 select * from product_ where name like 
+		concat('%',#{name},'%') and price > #{price}会出现name为空price不为空的语句错误；这时候就使用where标签。 
+		如果任何条件都不成立，那么就在sql语句里就不会出现where关键字 如果有任何条件成立，会自动去掉多出来的 and 或者 or。 -->
+	<select id="listProductByName" resultType="Product">
+		select * from product_
+		<trim prefix="WHERE" prefixOverrides="AND|OR"><!-- =where -->
+			<if test="name!=null">
+				and name like concat('%',#{name},'%')
+			</if>
+			<if test="price!=null and price!=0">
+				and price > #{price}
+			</if>
+		</trim>
+	</select>
+	<update id="updateProduct" parameterType="Product">
+		update product_
+		<trim prefix="SET" suffixOverrides=","><!-- set -->
+			<if test="name!=null">name=#{name},</if>
+			<if test="price!=null">price=#{price}</if>
+		</trim>
+		where id=#{id}
+	</update>
+
+	<!-- Mybatis里面没有else标签，但是可以使用when otherwise标签来达到这样的效果。 -->
+	<select id="productList" resultType="Product">
+		select * from product_
+		<where>
+			<choose>
+				<when test="name!=null">and name like concat('%',#{name},'%')</when>
+				<when test="price!=null and price!=0">and price > #{price}</when>
+				<otherwise>
+					and id>1
+				</otherwise>
+				<!-- 起作用是： 提供了任何条件，就进行条件查询，否则就使用id>1这个条件。 -->
+			</choose>
+		</where>
+	</select>
+
+	<!-- foreach标签通常用于in 这样的语法里,比如查询id是1,2,3的数据 -->
+	<select id="listProductForeach" resultType="Product">
+		SELECT * FROM product_
+		WHERE ID in
+		<foreach item="item" index="index" collection="list" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	
+	<!-- bind标签就像是再做一次字符串拼接，方便后续使用 -->
+	<!-- 如下，在模糊查询的基础上，把模糊查询改为bind标签。 -->
+	<select id="listProductBind" resultType="Product">
+		<bind name="likename" value="'%'+name+'%'" />
+		select * from product_ where name like #{likename}
+	</select>
+
+
+	<select id="listProduct" resultMap="productBean">
+		select c.*,p.*,c.id
+		'cid',p.id 'pid' ,c.name 'cname',p.name 'pname' from
+		category_ c left
+		join product_ p on c.id=p.cid
+	</select>
+	<select id="getProduct" resultMap="productBean">
+		select c.*, p.*, c.id 'cid',
+		p.id 'pid', c.name 'cname', p.name 'pname'
+		from category_ c
+		left join
+		product_ p on c.id = p.cid
+		where p.id = #{id}
+	</select>
+
+</mapper>

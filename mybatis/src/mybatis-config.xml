@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<package name="com.bean" />
+	</typeAliases>
+	<!-- 设置别名，自动扫描com.bean下类型， 在Category.xml使用resultType时不用写全com.bean.Category,直接用Category -->
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC" /><!-- 使用jdbc事务管理 -->
+			<dataSource type="POOLED">
+				<property name="driver" value="com.mysql.jdbc.Driver" />
+				<property name="url"
+					value="jdbc:mysql://localhost:3306/mybatis?characterEncoding=UTF-8" />
+				<!-- 数据库名，编码格式 -->
+				<property name="username" value="root" />
+				<property name="password" value="123456" />
+			</dataSource>
+		</environment>
+	</environments>
+	<mappers>
+		<mapper resource="com/bean/Category.xml" />
+		<mapper class="com.mapper.CategoryMapper" />
+		<mapper resource="com/bean/Product.xml" />
+		<mapper class="com.mapper.ProductMapper" />
+		<mapper resource="com/bean/Order.xml" />
+		<mapper class="com.mapper.OrderMapper" />
+		<mapper resource="com/bean/OrderItem.xml" />
+		<mapper class="com.mapper.OrderItemMapper" />
+	</mappers><!-- 映射Category.xml -->
+
+
+</configuration>
